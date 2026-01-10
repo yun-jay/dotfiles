@@ -1,28 +1,30 @@
+local parsers = { "lua", "go", "javascript", "typescript", "vim", "vimdoc", "markdown", "tsx", "json", "html", "css", "bash" }
+
 return {
   {
     "nvim-treesitter/nvim-treesitter",
     branch = "main",
-    build = ":TSUpdate",
     lazy = false,
+    build = function()
+      require("nvim-treesitter").install(parsers):wait()
+    end,
     config = function()
-      local parsers = { "lua", "go", "javascript", "typescript", "vim", "vimdoc", "markdown", "tsx", "json", "html", "css", "bash" }
-
       require("nvim-treesitter").setup()
-      require("nvim-treesitter").install(parsers)
 
-      -- Enable treesitter highlighting and indentation
+      -- Enable treesitter highlighting and indentation for supported filetypes
       vim.api.nvim_create_autocmd("FileType", {
-        pattern = parsers,
         callback = function()
-          vim.treesitter.start()
-          vim.bo.indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
+          if vim.treesitter.get_parser(0, vim.bo.filetype, { error = false }) then
+            vim.treesitter.start()
+            vim.bo.indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
+          end
         end,
       })
 
-      -- Enable treesitter-based folding (optional)
+      -- Enable treesitter-based folding
       vim.opt.foldmethod = "expr"
       vim.opt.foldexpr = "v:lua.vim.treesitter.foldexpr()"
-      vim.opt.foldenable = false -- Start with folds open
+      vim.opt.foldenable = false
     end,
   },
   {
