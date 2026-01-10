@@ -1,0 +1,19 @@
+{
+  "enabledPlugins": {
+    "typescript-lsp@claude-plugins-official": true
+  },
+  "alwaysThinkingEnabled": true,
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "command": "wt indicator set \"$(basename \"$PWD\")\" claude loading"
+      }
+    ],
+    "Notification": [
+      {
+        "matcher": "idle_prompt",
+        "command": "wt indicator set \"$(basename \"$PWD\")\" claude needs_input"
+      }
+    ]
+  }
+}

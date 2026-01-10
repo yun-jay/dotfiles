@@ -33,9 +33,20 @@ install_pkg stow
 install_pkg nvim
 install_pkg tmux
 
+# Install Claude Code
+if ! command -v claude &> /dev/null; then
+    echo "Installing Claude Code..."
+    curl -fsSL https://claude.ai/install.sh | bash
+else
+    echo "Claude Code already installed"
+fi
+
+# Remove existing claude settings to avoid stow conflict
+rm -f ~/.claude/settings.json
+
 # Stow packages
 cd "$DOTFILES"
-stow nvim tmux
+stow nvim tmux claude
 
 # Install Neovim plugins
 echo "Installing Neovim plugins..."
