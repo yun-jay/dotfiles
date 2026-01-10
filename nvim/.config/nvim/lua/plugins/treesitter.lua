@@ -1,18 +1,22 @@
+local parsers = { "lua", "go", "javascript", "typescript", "vim", "markdown", "tsx", "json", "html", "css" }
+
 return {
   {
     "nvim-treesitter/nvim-treesitter",
+    branch = "main",
     build = ":TSUpdate",
-    event = { "BufReadPost", "BufNewFile" },
-    cmd = { "TSInstall", "TSUpdate" },
+    lazy = false,
     config = function()
-      require("nvim-treesitter.configs").setup({
-        ensure_installed = {
-          "lua", "go", "javascript", "typescript", "vim", "markdown",
-          "tsx", "json", "html", "css",
-        },
-        highlight = { enable = true },
-        indent = { enable = true },
-        auto_install = true,
+      local treesitter = require("nvim-treesitter")
+      treesitter.setup()
+      treesitter.install(parsers)
+
+      vim.api.nvim_create_autocmd("FileType", {
+        pattern = parsers,
+        callback = function()
+          vim.treesitter.start()
+          vim.bo.indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
+        end,
       })
     end,
   },
@@ -22,9 +26,5 @@ return {
     opts = {
       enable_autocmd = false,
     },
-  },
-  {
-    "nvim-treesitter/playground",
-    cmd = "TSPlaygroundToggle",
   },
 }
