@@ -37,6 +37,10 @@ install_pkg tmux
 cd "$DOTFILES"
 stow nvim tmux
 
+# Install Neovim plugins
+echo "Installing Neovim plugins..."
+nvim --headless "+Lazy! sync" +qa
+
 # Install TPM (Tmux Plugin Manager) and plugins
 if [ ! -d ~/.tmux/plugins/tpm ]; then
     echo "Installing TPM..."
