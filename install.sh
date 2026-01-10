@@ -37,6 +37,16 @@ install_pkg tmux
 cd "$DOTFILES"
 stow nvim tmux
 
+# Install TPM (Tmux Plugin Manager) and plugins
+if [ ! -d ~/.tmux/plugins/tpm ]; then
+    echo "Installing TPM..."
+    git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
+    echo "Installing tmux plugins..."
+    ~/.tmux/plugins/tpm/bin/install_plugins
+else
+    echo "TPM already installed"
+fi
+
 # Install wt from source
 echo "Installing wt..."
 if command -v go &> /dev/null; then
