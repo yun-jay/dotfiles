@@ -47,6 +47,13 @@ else
     echo "TPM already installed"
 fi
 
+# Ensure ~/.local/bin is in PATH
+mkdir -p ~/.local/bin
+if ! grep -q 'export PATH="$HOME/.local/bin:$PATH"' ~/.zshrc 2>/dev/null; then
+    echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
+    echo "Added ~/.local/bin to PATH in .zshrc"
+fi
+
 # Install wt from source
 echo "Installing wt..."
 if command -v go &> /dev/null; then
@@ -62,3 +69,4 @@ else
 fi
 
 echo "Done!"
+echo "Run 'source ~/.zshrc' or restart your terminal"
