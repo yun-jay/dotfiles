@@ -5,18 +5,33 @@ DOTFILES="$(cd "$(dirname "$0")" && pwd)"
 
 echo "Installing dotfiles..."
 
-# Install stow if not present
-if ! command -v stow &> /dev/null; then
-    echo "Installing stow..."
-    if command -v brew &> /dev/null; then
-        brew install stow
-    elif command -v apt &> /dev/null; then
-        sudo apt install -y stow
-    else
-        echo "Please install GNU stow manually"
-        exit 1
-    fi
+# Detect package manager
+if command -v brew &> /dev/null; then
+    PM="brew"
+elif command -v apt &> /dev/null; then
+    PM="apt"
+else
+    echo "No supported package manager found (brew or apt)"
+    exit 1
 fi
+
+install_pkg() {
+    if ! command -v "$1" &> /dev/null; then
+        echo "Installing $1..."
+        if [ "$PM" = "brew" ]; then
+            brew install "$1"
+        else
+            sudo apt install -y "$1"
+        fi
+    else
+        echo "$1 already installed"
+    fi
+}
+
+# Install dependencies
+install_pkg stow
+install_pkg nvim
+install_pkg tmux
 
 # Stow packages
 cd "$DOTFILES"
