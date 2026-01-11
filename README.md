@@ -4,8 +4,15 @@ My personal dotfiles managed with [GNU Stow](https://www.gnu.org/software/stow/)
 
 ## Contents
 
-- `nvim` - Neovim configuration
-- `tmux` - Tmux configuration
+### Cross-platform (macOS + Linux)
+
+- `nvim` - Neovim configuration with Lazy.nvim, LSP, Telescope, etc.
+- `tmux` - Tmux configuration with TPM plugins
+- `claude` - Claude Code CLI settings and hooks
+
+### macOS only
+
+- `karabiner` - Karabiner-Elements keyboard remapping (Caps Lock → Control, Cmd+Ctrl+H/L for Space switching)
 
 ## Quick Install
 
@@ -15,66 +22,48 @@ cd ~/dotfiles
 ./install.sh
 ```
 
+The install script automatically detects your OS:
+- **macOS**: Installs all packages including Karabiner-Elements
+- **Linux**: Installs only cross-platform packages
+
 ## Manual Setup
 
 ### Prerequisites
 
 ```bash
 # macOS
-brew install stow
+brew install stow nvim tmux
 
 # Ubuntu/Debian
-sudo apt install stow
+sudo apt install stow nvim tmux
 ```
 
-### Install all configs
+### Install configs
 
 ```bash
 cd ~/dotfiles
-stow nvim tmux
-```
 
-### Install individual configs
+# Cross-platform
+stow nvim tmux claude
 
-```bash
-cd ~/dotfiles
-stow nvim    # Only neovim
-stow tmux    # Only tmux
+# macOS only
+stow karabiner
 ```
 
 ### Uninstall
 
 ```bash
 cd ~/dotfiles
-stow -D nvim tmux
+stow -D nvim tmux claude karabiner
 ```
 
 ## Updating
 
-### Pull latest changes
+Since configs are symlinked, changes take effect immediately after pulling:
 
 ```bash
 cd ~/dotfiles
 git pull
-```
-
-Since configs are symlinked, changes take effect immediately.
-
-### After adding new stow packages
-
-```bash
-cd ~/dotfiles
-git pull
-stow <new-package>
-```
-
-### Push local changes
-
-```bash
-cd ~/dotfiles
-git add -A
-git commit -m "Update configs"
-git push
 ```
 
 ## How Stow Works
@@ -83,15 +72,22 @@ Stow creates symlinks from your home directory to the dotfiles repo. Each packag
 
 ```
 dotfiles/
-├── nvim/.config/nvim/    →  ~/.config/nvim
-└── tmux/.tmux.conf       →  ~/.tmux.conf
+├── nvim/.config/nvim/          →  ~/.config/nvim
+├── tmux/.tmux.conf             →  ~/.tmux.conf
+├── claude/.claude/             →  ~/.claude
+└── karabiner/.config/karabiner →  ~/.config/karabiner
 ```
 
-Running `stow nvim` creates: `~/.config/nvim -> ~/dotfiles/nvim/.config/nvim`
+## Karabiner-Elements (macOS)
+
+Custom keyboard mappings:
+- **Caps Lock → Control** - More ergonomic modifier key
+- **Cmd+Ctrl+H** - Switch to left Space
+- **Cmd+Ctrl+L** - Switch to right Space
 
 ## wt (Git Worktree Manager)
 
-The `wt` tool is installed separately from [yun-jay/wt](https://github.com/yun-jay/wt):
+The `wt` tool is installed automatically if Go is available, or manually from [yun-jay/wt](https://github.com/yun-jay/wt):
 
 ```bash
 git clone https://github.com/yun-jay/wt.git
