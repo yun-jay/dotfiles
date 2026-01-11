@@ -3,7 +3,9 @@ set -e
 
 DOTFILES="$(cd "$(dirname "$0")" && pwd)"
 
-echo "Installing dotfiles..."
+# Detect OS
+OS="$(uname -s)"
+echo "Installing dotfiles on $OS..."
 
 # Detect package manager
 if command -v brew &> /dev/null; then
@@ -28,7 +30,13 @@ install_pkg() {
     fi
 }
 
-# Install dependencies
+# =============================================================================
+# UNIX (Common packages for macOS and Linux)
+# =============================================================================
+
+echo ""
+echo "=== Installing common packages ==="
+
 install_pkg stow
 install_pkg nvim
 install_pkg tmux
@@ -44,7 +52,7 @@ fi
 # Remove existing claude settings to avoid stow conflict
 rm -f ~/.claude/settings.json
 
-# Stow packages
+# Stow common packages
 cd "$DOTFILES"
 stow nvim tmux claude
 
@@ -83,5 +91,31 @@ else
     echo "Install Go and run: git clone https://github.com/yun-jay/wt.git && cd wt && make install"
 fi
 
+# =============================================================================
+# macOS only
+# =============================================================================
+
+if [ "$OS" = "Darwin" ]; then
+    echo ""
+    echo "=== Installing macOS packages ==="
+
+    # Karabiner-Elements for keyboard remapping
+    if [ ! -d "/Applications/Karabiner-Elements.app" ]; then
+        echo "Installing Karabiner-Elements..."
+        brew install --cask karabiner-elements
+    else
+        echo "Karabiner-Elements already installed"
+    fi
+
+    # Stow macOS packages
+    cd "$DOTFILES"
+    stow karabiner
+fi
+
+# =============================================================================
+# Done
+# =============================================================================
+
+echo ""
 echo "Done!"
 echo "Run 'source ~/.zshrc' or restart your terminal"
