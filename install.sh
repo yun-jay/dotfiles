@@ -84,6 +84,7 @@ if command -v go &> /dev/null; then
     git clone https://github.com/yun-jay/wt.git "$WR_TMP/wt"
     cd "$WR_TMP/wt"
     make install
+    cd "$DOTFILES"
     rm -rf "$WR_TMP"
     echo "wt installed successfully"
 else
