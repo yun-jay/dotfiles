@@ -6,13 +6,33 @@
   "hooks": {
     "UserPromptSubmit": [
       {
-        "command": "wt indicator set \"$(basename \"$PWD\")\" claude loading"
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/set-indicator.sh loading"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/set-indicator.sh idle"
+          }
+        ]
       }
     ],
     "Notification": [
       {
-        "matcher": "idle_prompt",
-        "command": "wt indicator set \"$(basename \"$PWD\")\" claude needs_input"
+        "matcher": "permission_prompt",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/set-indicator.sh needs_input"
+          }
+        ]
       }
     ]
   }
