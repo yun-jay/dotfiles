@@ -1,8 +1,4 @@
 {
-  "enabledPlugins": {
-    "typescript-lsp@claude-plugins-official": true
-  },
-  "alwaysThinkingEnabled": true,
   "hooks": {
     "UserPromptSubmit": [
       {
@@ -35,5 +31,9 @@
         ]
       }
     ]
-  }
+  },
+  "enabledPlugins": {
+    "typescript-lsp@claude-plugins-official": true
+  },
+  "alwaysThinkingEnabled": true
 }
