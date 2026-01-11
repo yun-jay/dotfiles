@@ -1,37 +1,34 @@
-local parsers = { "lua", "go", "javascript", "typescript", "vim", "vimdoc", "markdown", "tsx", "json", "html", "css", "bash" }
-
 return {
   {
     "nvim-treesitter/nvim-treesitter",
-    branch = "main",
     lazy = false,
-    build = function()
-      require("nvim-treesitter").install(parsers):wait()
-    end,
+    build = ":TSUpdate",
     config = function()
-      require("nvim-treesitter").setup()
-
-      -- Enable treesitter highlighting and indentation for supported filetypes
-      vim.api.nvim_create_autocmd("FileType", {
-        callback = function()
-          if vim.treesitter.get_parser(0, vim.bo.filetype, { error = false }) then
-            vim.treesitter.start()
-            vim.bo.indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
-          end
-        end,
+      require("nvim-treesitter.configs").setup({
+        ensure_installed = {
+          "lua",
+          "go",
+          "javascript",
+          "typescript",
+          "tsx",
+          "vim",
+          "vimdoc",
+          "markdown",
+          "json",
+          "html",
+          "css",
+          "bash",
+        },
+        sync_install = false,
+        auto_install = true,
+        highlight = {
+          enable = true,
+          additional_vim_regex_highlighting = false,
+        },
+        indent = {
+          enable = true,
+        },
       })
-
-      -- Enable treesitter-based folding
-      vim.opt.foldmethod = "expr"
-      vim.opt.foldexpr = "v:lua.vim.treesitter.foldexpr()"
-      vim.opt.foldenable = false
     end,
-  },
-  {
-    "JoosepAlviste/nvim-ts-context-commentstring",
-    lazy = true,
-    opts = {
-      enable_autocmd = false,
-    },
   },
 }
