@@ -77,6 +77,51 @@ if ! grep -q 'export PATH="$HOME/.local/bin:$PATH"' ~/.zshrc 2>/dev/null; then
     echo "Added ~/.local/bin to PATH in .zshrc"
 fi
 
+# =============================================================================
+# Go Installation
+# =============================================================================
+
+echo ""
+echo "=== Installing Go ==="
+
+if ! command -v go &> /dev/null; then
+    echo "Installing Go..."
+    if [ "$PM" = "brew" ]; then
+        brew install go
+    else
+        sudo apt install -y golang-go
+    fi
+else
+    echo "Go already installed: $(go version)"
+fi
+
+# Configure Go paths in zshrc
+echo "Configuring Go paths..."
+mkdir -p ~/go/bin
+
+if ! grep -q 'export GOPATH="$HOME/go"' ~/.zshrc 2>/dev/null; then
+    echo 'export GOPATH="$HOME/go"' >> ~/.zshrc
+    echo "Added GOPATH to .zshrc"
+fi
+
+if ! grep -q 'export PATH="$GOPATH/bin:$PATH"' ~/.zshrc 2>/dev/null; then
+    echo 'export PATH="$GOPATH/bin:$PATH"' >> ~/.zshrc
+    echo "Added Go bin to PATH in .zshrc"
+fi
+
+# Source the updated PATH for this script
+export GOPATH="$HOME/go"
+export PATH="$GOPATH/bin:$PATH"
+
+# Install air (Go live reload tool)
+echo "Installing air..."
+if ! command -v air &> /dev/null; then
+    go install github.com/air-verse/air@latest
+    echo "air installed successfully"
+else
+    echo "air already installed"
+fi
+
 # Install wt from source
 echo "Installing wt..."
 if command -v go &> /dev/null; then
@@ -119,4 +164,5 @@ fi
 
 echo ""
 echo "Done!"
-echo "Run 'source ~/.zshrc' or restart your terminal"
+echo ""
+echo "IMPORTANT: Run 'source ~/.zshrc' or restart your terminal to apply PATH changes."
