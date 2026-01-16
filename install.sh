@@ -60,15 +60,17 @@ stow nvim tmux claude
 echo "Installing Neovim plugins..."
 nvim --headless "+Lazy! sync" +qa
 
-# Install TPM (Tmux Plugin Manager) and plugins
+# Install TPM (Tmux Plugin Manager)
 if [ ! -d ~/.tmux/plugins/tpm ]; then
     echo "Installing TPM..."
     git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
-    echo "Installing tmux plugins..."
-    ~/.tmux/plugins/tpm/bin/install_plugins
 else
     echo "TPM already installed"
 fi
+
+# Install tmux plugins
+echo "Installing tmux plugins..."
+~/.tmux/plugins/tpm/bin/install_plugins
 
 # Ensure ~/.local/bin is in PATH
 mkdir -p ~/.local/bin

@@ -4,7 +4,7 @@ return {
     lazy = false,
     build = ":TSUpdate",
     config = function()
-      require("nvim-treesitter").setup({
+      require("nvim-treesitter.configs").setup({
         ensure_installed = {
           "lua",
           "go",
@@ -21,6 +21,9 @@ return {
         },
         sync_install = false,
         auto_install = true,
+        highlight = {
+          enable = true,
+        },
       })
       vim.treesitter.language.register("markdown", "mdx")
     end,
