@@ -1,8 +1,5 @@
 local keymap = vim.keymap.set
 
--- File explorer
-keymap("n", "<leader>pv", vim.cmd.Ex)
-
 -- Move selected lines up/down
 keymap("v", "J", ":m '>+1<CR>gv=gv")
 keymap("v", "K", ":m '<-2<CR>gv=gv")

@@ -40,6 +40,9 @@ echo "=== Installing common packages ==="
 install_pkg stow
 install_pkg nvim
 install_pkg tmux
+install_pkg fzf
+install_pkg zsh-autosuggestions
+install_pkg zsh-syntax-highlighting
 
 # Install Claude Code
 if ! command -v claude &> /dev/null; then
@@ -49,12 +52,14 @@ else
     echo "Claude Code already installed"
 fi
 
-# Remove existing claude settings to avoid stow conflict
+# Remove existing configs to avoid stow conflicts
 rm -f ~/.claude/settings.json
+rm -f ~/.zshrc
+rm -rf ~/.zsh
 
 # Stow common packages
 cd "$DOTFILES"
-stow nvim tmux claude
+stow nvim tmux claude zsh
 
 # Install Neovim plugins
 echo "Installing Neovim plugins..."
@@ -72,12 +77,8 @@ fi
 echo "Installing tmux plugins..."
 ~/.tmux/plugins/tpm/bin/install_plugins
 
-# Ensure ~/.local/bin is in PATH
+# Ensure ~/.local/bin exists
 mkdir -p ~/.local/bin
-if ! grep -q 'export PATH="$HOME/.local/bin:$PATH"' ~/.zshrc 2>/dev/null; then
-    echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
-    echo "Added ~/.local/bin to PATH in .zshrc"
-fi
 
 # =============================================================================
 # Go Installation
@@ -97,21 +98,8 @@ else
     echo "Go already installed: $(go version)"
 fi
 
-# Configure Go paths in zshrc
-echo "Configuring Go paths..."
+# Setup Go paths
 mkdir -p ~/go/bin
-
-if ! grep -q 'export GOPATH="$HOME/go"' ~/.zshrc 2>/dev/null; then
-    echo 'export GOPATH="$HOME/go"' >> ~/.zshrc
-    echo "Added GOPATH to .zshrc"
-fi
-
-if ! grep -q 'export PATH="$GOPATH/bin:$PATH"' ~/.zshrc 2>/dev/null; then
-    echo 'export PATH="$GOPATH/bin:$PATH"' >> ~/.zshrc
-    echo "Added Go bin to PATH in .zshrc"
-fi
-
-# Source the updated PATH for this script
 export GOPATH="$HOME/go"
 export PATH="$GOPATH/bin:$PATH"
 
