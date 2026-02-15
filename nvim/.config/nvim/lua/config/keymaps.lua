@@ -25,3 +25,7 @@ if vim.env.TMUX then
     vim.fn.system("~/.local/bin/tmux-toggle-claude")
   end, { desc = "Toggle Claude Side Panel" })
 end
+
+-- Format JSON with jq
+keymap("n", "<leader>jq", ":%!jq .<CR>", { desc = "Format JSON with jq" })
+keymap("v", "<leader>jq", ":!jq .<CR>", { desc = "Format selected JSON with jq" })
