@@ -45,7 +45,7 @@ install_pkg zsh-autosuggestions
 install_pkg zsh-syntax-highlighting
 install_pkg gh
 install_pkg jq
-install_pkg mosh
+install_pkg et
 install_pkg nvm
 install_pkg ripgrep
 
