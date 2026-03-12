@@ -45,7 +45,15 @@ install_pkg zsh-autosuggestions
 install_pkg zsh-syntax-highlighting
 install_pkg gh
 install_pkg jq
-install_pkg et
+# Eternal Terminal (requires tap)
+if ! command -v et &> /dev/null; then
+    echo "Installing eternal-terminal..."
+    if [ "$PM" = "brew" ]; then
+        brew install MisterTea/et/et
+    fi
+else
+    echo "eternal-terminal already installed"
+fi
 install_pkg nvm
 install_pkg ripgrep
 
