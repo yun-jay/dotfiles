@@ -47,6 +47,7 @@ install_pkg gh
 install_pkg jq
 install_pkg mosh
 install_pkg nvm
+install_pkg ripgrep
 
 # Install Node.js via nvm (not Homebrew)
 export NVM_DIR="$HOME/.nvm"
@@ -194,6 +195,22 @@ if [ "$OS" = "Darwin" ]; then
         brew install --cask karabiner-elements
     else
         echo "Karabiner-Elements already installed"
+    fi
+
+    # OrbStack for Docker and Linux VMs
+    if [ ! -d "/Applications/OrbStack.app" ]; then
+        echo "Installing OrbStack..."
+        brew install --cask orbstack
+    else
+        echo "OrbStack already installed"
+    fi
+
+    # Ghostty terminal
+    if [ ! -d "/Applications/Ghostty.app" ]; then
+        echo "Installing Ghostty..."
+        brew install --cask ghostty
+    else
+        echo "Ghostty already installed"
     fi
 
     # Stow macOS packages
