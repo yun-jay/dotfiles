@@ -1,6 +1,3 @@
-# NVM
-source $(brew --prefix nvm)/nvm.sh
-
 # PATH
 export PATH="$PATH:$HOME/bin"
 export PATH="$HOME/.local/bin:$PATH"
@@ -19,6 +16,9 @@ case ":$PATH:" in
   *) export PATH="$PNPM_HOME:$PATH" ;;
 esac
 
+# bash
+export PATH="/opt/homebrew/bin:$PATH"
+
 # npm
 export PATH=$PATH:$(npm bin -g)
 
@@ -36,3 +36,14 @@ source $(brew --prefix)/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zs
 
 # Ctrl+F to accept autosuggestion
 bindkey '^f' autosuggest-accept
+
+# Secrets management (Vaultwarden)
+# Set BW_SERVER to your Vaultwarden URL before using
+source ~/.zsh/functions/secrets.zsh
+
+# NVM
+export NVM_DIR="$HOME/.nvm"
+[ -s "$(brew --prefix nvm)/nvm.sh" ] && source "$(brew --prefix nvm)/nvm.sh"
+
+# Local machine-specific config (not tracked by git)
+[[ -f ~/.zshrc.local ]] && source ~/.zshrc.local

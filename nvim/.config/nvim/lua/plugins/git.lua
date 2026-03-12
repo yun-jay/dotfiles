@@ -22,6 +22,7 @@ return {
     keys = {
       { "<leader>dv", ":DiffviewOpen<CR>",  desc = "Open Diffview" },
       { "<leader>dc", ":DiffviewClose<CR>", desc = "Close Diffview" },
+      { "<leader>gf", ":DiffviewFileHistory %<CR>", desc = "File Git History" },
     },
     config = function()
       require("diffview").setup({})
@@ -70,5 +71,18 @@ return {
         enable_builtin = true,
       })
     end,
+  },
+  {
+    "f-person/git-blame.nvim",
+    event = "VeryLazy",
+    opts = {
+      enabled = true,
+      message_template = " <author> • <date> • <summary>",
+      date_format = "%Y-%m-%d",
+      virtual_text_column = 1,
+    },
+    keys = {
+      { "<leader>gb", "<cmd>GitBlameToggle<cr>", desc = "Toggle Git Blame" },
+    },
   },
 }

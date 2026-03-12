@@ -1,0 +1,130 @@
+version: '3'
+
+tasks:
+  pr-context:
+    desc: "Fetch PR description and diff to understand the PR"
+    silent: true
+    dir: '{{.USER_WORKING_DIR}}'
+    preconditions:
+      - sh: git rev-parse --is-inside-work-tree 2>/dev/null
+        msg: "Must be run inside a git repository"
+    vars:
+      EXCLUDE: '{{.EXCLUDE | default ".po,.lock"}}'
+      PR: '{{.PR | default ""}}'
+    cmds:
+      - |
+        PR_REF="{{.PR}}"
+        if [ -z "$PR_REF" ]; then
+          PR_REF=$(gh pr view --json number -q .number 2>/dev/null) || { echo "No PR found for current branch" >&2; exit 1; }
+        fi
+
+        # Get PR metadata
+        echo "# Pull Request Context"
+        echo ""
+        gh pr view "$PR_REF" --json number,title,body,author,baseRefName,headRefName | jq -r '
+          "## PR #\(.number): \(.title)\n",
+          "**Author:** \(.author.login)",
+          "**Branch:** \(.headRefName) → \(.baseRefName)\n",
+          "## Description\n",
+          (.body // "No description provided."),
+          "\n"
+        '
+
+        # Get diff
+        echo "## Diff"
+        echo ""
+        gh pr diff "$PR_REF" | awk '
+          BEGIN { skip=0 }
+          /^diff --git/ {
+            skip=0
+            file=$0
+            split("{{.EXCLUDE}}", exts, ",")
+            for (i in exts) {
+              ext = exts[i]
+              gsub(/^[[:space:]]+|[[:space:]]+$/, "", ext)
+              if (file ~ ext "$") { skip=1; break }
+            }
+          }
+          !skip { print }
+        '
+
+  pr-comments:
+    desc: "Get unresolved PR comments (uses current branch if PR not specified)"
+    silent: true
+    dir: '{{.USER_WORKING_DIR}}'
+    preconditions:
+      - sh: git rev-parse --is-inside-work-tree 2>/dev/null
+        msg: "Must be run inside a git repository"
+    vars:
+      INCLUDE_BOTS: '{{.INCLUDE_BOTS | default "false"}}'
+      PR: '{{.PR | default ""}}'
+    cmds:
+      - |
+        INCLUDE_BOTS="{{.INCLUDE_BOTS}}"
+        PR_REF="{{.PR}}"
+        if [ -z "$PR_REF" ]; then
+          PR_REF=$(gh pr view --json number -q .number 2>/dev/null) || { echo "No PR found for current branch"; exit 1; }
+        elif ! [[ "$PR_REF" =~ ^[0-9]+$ ]]; then
+          # If PR is a branch name, resolve to PR number
+          PR_REF=$(gh pr view "$PR_REF" --json number -q .number 2>/dev/null) || { echo "No PR found for branch: $PR_REF"; exit 1; }
+        fi
+        gh api graphql -f query='
+          query($pr: Int!, $owner: String!, $repo: String!) {
+            repository(owner: $owner, name: $repo) {
+              pullRequest(number: $pr) {
+                comments(first: 100) {
+                  nodes {
+                    author { login }
+                    body
+                    createdAt
+                  }
+                }
+                reviews(first: 100) {
+                  nodes {
+                    author { login }
+                    body
+                    state
+                    createdAt
+                  }
+                }
+                reviewThreads(first: 100) {
+                  nodes {
+                    isResolved
+                    comments(first: 10) {
+                      nodes {
+                        author { login }
+                        body
+                        path
+                        line
+                        diffHunk
+                        createdAt
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ' -f owner="$(gh repo view --json owner -q .owner.login)" \
+          -f repo="$(gh repo view --json name -q .name)" \
+          -F pr="$PR_REF" | jq -r --arg include_bots "$INCLUDE_BOTS" '
+            # Helper function to check if comment should be excluded
+            def is_excluded_author: (.author.login // "") | test("\\[bot\\]$|^(vercel|linear|codecov|dependabot|renovate|github-actions|graphite-app)$");
+            def is_automation_content: (.body // "") | test("Graphite Merge Queue|<!-- linear|<!-- graphite|\\[vc\\]:|Learn more about \\[Vercel");
+            def should_include: if $include_bots == "true" then true else ((is_excluded_author | not) and (is_automation_content | not)) end;
+
+            .data.repository.pullRequest | (
+              # General PR comments
+              (.comments.nodes[] | select(should_include) |
+                "## General Comment\n**Type:** Conversation\n**Author:** \(.author.login)\n**Date:** \(.createdAt | split("T")[0])\n\n### Comment:\n\(.body)\n\n---\n"
+              ),
+              # Review comments (general review feedback)
+              (.reviews.nodes[] | select((.body // "") != "") | select(should_include) |
+                "## Review Comment\n**Type:** Review (\(.state))\n**Author:** \(.author.login)\n**Date:** \(.createdAt | split("T")[0])\n\n### Comment:\n\(.body)\n\n---\n"
+              ),
+              # Review thread comments (unresolved inline code comments)
+              (.reviewThreads.nodes[] | select(.isResolved == false) | .comments.nodes[] | select(should_include) |
+                "## Code Review Comment\n**Type:** Inline Code Review\n**File:** \(.path)\n**Line:** \(.line // "N/A")\n**Author:** \(.author.login)\n**Date:** \(.createdAt | split("T")[0])\n\n### Code Context:\n```\n\(.diffHunk // "No code context")\n```\n\n### Comment:\n\(.body)\n\n---\n"
+              )
+            )
+          '

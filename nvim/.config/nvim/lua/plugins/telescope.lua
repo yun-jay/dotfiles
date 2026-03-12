@@ -18,6 +18,22 @@ return {
     },
     { "<leader>fb", function() require("telescope.builtin").buffers() end,   desc = "Find Buffers" },
     { "<leader>fh", function() require("telescope.builtin").help_tags() end, desc = "Help Tags" },
+    {
+      "<leader>fd",
+      function()
+        local dir = vim.bo.filetype == "oil" and require("oil").get_current_dir() or vim.fn.expand("%:p:h")
+        require("telescope.builtin").find_files({ cwd = dir })
+      end,
+      desc = "Find Files (Current Dir)"
+    },
+    {
+      "<leader>fD",
+      function()
+        local dir = vim.bo.filetype == "oil" and require("oil").get_current_dir() or vim.fn.expand("%:p:h")
+        require("telescope.builtin").live_grep({ cwd = dir })
+      end,
+      desc = "Grep Files (Current Dir)"
+    },
   },
   config = function()
     require("telescope").setup({})
