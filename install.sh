@@ -192,6 +192,8 @@ else
     echo "air already installed"
 fi
 
+install_pkg make
+
 # Install wt from source
 echo "Installing wt..."
 if command -v go &> /dev/null; then
