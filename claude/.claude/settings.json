@@ -34,9 +34,9 @@
   },
   "enabledPlugins": {
     "typescript-lsp@claude-plugins-official": true,
-    "lua-lsp@claude-plugins-official": true
+    "lua-lsp@claude-plugins-official": true,
+    "gopls-lsp@claude-plugins-official": true
   },
   "alwaysThinkingEnabled": true,
-  "skipDangerousModePermissionPrompt": true,
-  "effortLevel": "medium"
+  "skipDangerousModePermissionPrompt": true
 }

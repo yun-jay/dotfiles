@@ -38,7 +38,17 @@ echo ""
 echo "=== Installing common packages ==="
 
 install_pkg stow
-install_pkg nvim
+# Neovim (different package name on apt vs brew)
+if ! command -v nvim &> /dev/null; then
+    echo "Installing neovim..."
+    if [ "$PM" = "brew" ]; then
+        brew install nvim
+    else
+        sudo apt install -y neovim
+    fi
+else
+    echo "neovim already installed"
+fi
 install_pkg tmux
 install_pkg fzf
 install_pkg zsh-autosuggestions
