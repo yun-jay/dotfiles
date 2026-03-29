@@ -64,7 +64,15 @@ if ! command -v et &> /dev/null; then
 else
     echo "eternal-terminal already installed"
 fi
-install_pkg nvm
+# nvm (not available via apt, install via curl)
+if [ "$PM" = "brew" ]; then
+    install_pkg nvm
+elif [ ! -d "$HOME/.nvm" ]; then
+    echo "Installing nvm..."
+    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+else
+    echo "nvm already installed"
+fi
 install_pkg ripgrep
 
 # Install Node.js via nvm (not Homebrew)
