@@ -55,14 +55,40 @@ Key differences:
 - Destructure `{ t }` from `useLingui()` (NOT `{ i18n }`)
 - Use `t\`text\`` (NOT `t(i18n)\`text\``)
 
+**Static translations outside components must use `msg` message descriptors:**
+```tsx
+import { msg } from '@lingui/core/macro';
+import type { MessageDescriptor } from '@lingui/core';
+
+// Correct — defined outside component, resolved inside
+const LABELS: Record<string, MessageDescriptor> = {
+  day: msg`Day`,
+  week: msg`Week`,
+};
+
+function MyComponent() {
+  const { t } = useLingui();
+  return <span>{t(LABELS.day)}</span>;
+}
+```
+
+**Incorrect — calling `t` outside a component:**
+```tsx
+// Wrong — t`` can only be called inside a component with useLingui()
+const LABELS = {
+  day: t`Day`,  // ❌ t is not available here
+};
+```
+
 **Reference files using the correct pattern:**
 - `apps/web-app/src/features/calendars/components/create-calendar-modal.tsx`
 - `apps/web-app/src/features/calendars/components/calendars-table.tsx`
 
 **How to check:**
-- `rg "from '@lingui/core/macro'" <changed-files>` — should NOT appear in new code
+- `rg "from '@lingui/core/macro'" <changed-files>` — should only import `msg`, NOT `t` (use `t` from `useLingui()` instead)
 - `rg "from '@lingui/react'" <changed-files>` — should be `@lingui/react/macro` instead (unless it's a non-macro import like `I18nProvider`)
 - `rg "t\(i18n\)" <changed-files>` — should NOT appear in new code
+- Look for `t\`...\`` or `t(i18n)\`...\`` used in module-level constants (outside components) — these must use `msg\`...\`` instead and be resolved with `t(descriptor)` inside the component
 
 ### 2. One Component Per File (HIGH priority)
 
