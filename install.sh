@@ -100,6 +100,14 @@ else
     echo "typescript-language-server already installed"
 fi
 
+# Install pnpm via npm
+if ! command -v pnpm &> /dev/null; then
+    echo "Installing pnpm..."
+    npm install -g pnpm
+else
+    echo "pnpm already installed"
+fi
+
 # Install Bitwarden CLI
 if ! command -v bw &> /dev/null; then
     echo "Installing Bitwarden CLI..."
@@ -123,6 +131,8 @@ if ! command -v task &> /dev/null; then
 else
     echo "go-task already installed"
 fi
+
+install_pkg just
 
 # Install Claude Code
 if ! command -v claude &> /dev/null; then

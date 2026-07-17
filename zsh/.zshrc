@@ -2,7 +2,7 @@
 export PATH="$PATH:$HOME/bin"
 export PATH="$HOME/.local/bin:$PATH"
 
-. "$HOME/.local/bin/env"
+[ -s "$HOME/.local/bin/env" ] && . "$HOME/.local/bin/env"
 
 # Bun
 export BUN_INSTALL="$HOME/.bun"
@@ -50,3 +50,11 @@ export NVM_DIR="$HOME/.nvm"
 
 alias vnc-macmini="open vnc://yun-jay@192.168.178.127"
 
+load_hcloud_token() {
+    export HCLOUD_TOKEN="$(
+      security find-generic-password \
+        -a "$USER" \
+        -s "HCLOUD_TOKEN" \
+        -w
+    )"
+}

@@ -52,6 +52,13 @@
       }
     ]
   },
-  "skipDangerousModePermissionPrompt": true,
-  "tui": "fullscreen"
+  "enabledPlugins": {
+    "typescript-lsp@claude-plugins-official": true,
+    "lua-lsp@claude-plugins-official": true,
+    "gopls-lsp@claude-plugins-official": true,
+    "figma@claude-plugins-official": true
+  },
+  "alwaysThinkingEnabled": true,
+  "tui": "fullscreen",
+  "skipDangerousModePermissionPrompt": true
 }
