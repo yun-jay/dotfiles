@@ -154,6 +154,44 @@ for plugin in \
     pi install "$plugin"
 done
 
+# Patch @fnnm/pi-session-breakdown: upstream (only v0.1.0 exists on npm/git) is
+# a broken fork — index.ts imports "../shared/lib.ts" (never published) and its
+# lib.ts is missing the extractCostTotal/formatUsd helpers. Fix the import path
+# and restore the two helpers (taken from the original mitsuhiko/agent-stuff).
+SB="$HOME/.pi/agent/npm/node_modules/@fnnm/pi-session-breakdown"
+if [ -d "$SB" ]; then
+    echo "Patching @fnnm/pi-session-breakdown..."
+    sed -i.bak 's#\.\./shared/lib\.ts#./lib.ts#' "$SB/index.ts" && rm -f "$SB/index.ts.bak"
+    if ! grep -q "extractCostTotal" "$SB/lib.ts"; then
+        cat >> "$SB/lib.ts" <<'SBEOF'
+
+export function formatUsd(cost: number): string {
+	if (!Number.isFinite(cost)) return "$0.00";
+	if (cost >= 1) return `$${cost.toFixed(2)}`;
+	if (cost >= 0.1) return `$${cost.toFixed(3)}`;
+	return `$${cost.toFixed(4)}`;
+}
+
+export function extractCostTotal(usage: unknown): number {
+	if (!usage) return 0;
+	const c = (usage as Record<string, unknown>)?.cost;
+	if (typeof c === "number") return Number.isFinite(c) ? c : 0;
+	if (typeof c === "string") {
+		const n = Number(c);
+		return Number.isFinite(n) ? n : 0;
+	}
+	const t = (c as Record<string, unknown>)?.total;
+	if (typeof t === "number") return Number.isFinite(t) ? t : 0;
+	if (typeof t === "string") {
+		const n = Number(t);
+		return Number.isFinite(n) ? n : 0;
+	}
+	return 0;
+}
+SBEOF
+    fi
+fi
+
 # Remove existing configs to avoid stow conflicts
 rm -f ~/.claude/settings.json
 rm -f ~/.zshrc
