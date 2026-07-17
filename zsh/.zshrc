@@ -47,3 +47,6 @@ export NVM_DIR="$HOME/.nvm"
 
 # Local machine-specific config (not tracked by git)
 [[ -f ~/.zshrc.local ]] && source ~/.zshrc.local
+
+alias vnc-macmini="open vnc://yun-jay@192.168.178.127"
+

@@ -90,6 +90,30 @@ const LABELS = {
 - `rg "t\(i18n\)" <changed-files>` — should NOT appear in new code
 - Look for `t\`...\`` or `t(i18n)\`...\`` used in module-level constants (outside components) — these must use `msg\`...\`` instead and be resolved with `t(descriptor)` inside the component
 
+**`<Trans>` vs `` t`...` `` inside JSX bodies (HIGH priority sub-check):**
+
+Reserve `` t`...` `` for *string contexts* — places that must accept a plain string: `placeholder`, `aria-label`, `title`, `toast.success(...)`, `t({ message, context })`, dialog `description`/`labels` props, or values inside a `Record<…, string>`.
+
+For *rendered JSX text content*, always use `<Trans>`. The `<Trans>` macro produces extraction-friendly output, supports nested JSX (links, bolding), and reads more naturally than a curly-brace interpolation.
+
+**Bad — `` t`...` `` rendering text:**
+```tsx
+<h3>{t`Assigned ${assigned.length}/${total}`}</h3>
+<Button onClick={handleReset}>{t`Reset`}</Button>
+<p>{t`Available ${count}`}</p>
+```
+
+**Good — `<Trans>` with interpolation:**
+```tsx
+<h3><Trans>Assigned {assigned.length}/{total}</Trans></h3>
+<Button onClick={handleReset}><Trans>Reset</Trans></Button>
+<p><Trans>Available {count}</Trans></p>
+```
+
+**How to check:**
+- `rg "\{t\`" <changed-files>` — flag every match where the result lands directly as JSX text (i.e. wrapped in `{…}` between tags, not assigned to a `placeholder`/`aria-label`/`title`/etc. attribute or used as a function argument)
+- If you remove the only `` t`...` `` usage from a component, also drop `t` from the `useLingui()` destructure to avoid an unused-variable error
+
 ### 2. One Component Per File (HIGH priority)
 
 Every file should contain at most **one exported component**. If a file defines multiple components, they must be split into separate files.
@@ -235,17 +259,15 @@ Data filtering should happen at the query level (Supabase `.eq()`, `.filter()`, 
 
 ### 13. Remove Unnecessary Code (MEDIUM priority)
 
-- Flag unnecessary `useMemo` wrapping (especially for static data, simple transforms, or values that rarely change)
-- Flag unnecessary `useCallback` wrapping (especially for simple handlers that don't need memoization)
 - Flag unnecessary function wrappers — if a function just calls another function with the same args, call it directly
 - Flag `"use client"` directives that are no longer needed
 - Flag deprecated providers (e.g., `SidebarProvider`)
 - Flag unused imports or variables
 
 **How to check:**
-- `rg "useMemo" <changed-files>` — check if the memoization is justified (expensive computation, referential equality needed for deps)
-- `rg "useCallback" <changed-files>` — check if the callback is passed to memoized children
 - Look for wrapper functions like `const refresh = () => swrMutate()` — just use `swrMutate` directly
+
+(For `useMemo` / `useCallback` see check #20. For inline arrow-function handlers see check #21.)
 
 ### 14. Organisation ID Filters (MEDIUM priority)
 
@@ -291,6 +313,174 @@ Data filtering should happen at the query level (Supabase `.eq()`, `.filter()`, 
 - Look for unnecessary abstractions or convoluted algorithms
 - If something requires reading twice to understand, it probably needs simplification
 
+### 20. React Performance Hooks (HIGH priority)
+
+Do not wrap values in `useMemo` or functions in `useCallback` unless the computation is genuinely expensive (e.g., filtering/sorting large lists, complex transformations) **and** the result is passed to a dependency that benefits from referential stability (e.g., a `React.memo`-wrapped child, a dependency array of another hook, or a context value). For primitive values, simple derivations, inline event handlers passed to native DOM elements, and functions that are only called locally within the component, use plain variables and arrow functions instead.
+
+**Bad — memoizing a cheap derivation:**
+```tsx
+const fullName = useMemo(() => `${firstName} ${lastName}`, [firstName, lastName]);
+```
+**Good:**
+```tsx
+const fullName = `${firstName} ${lastName}`;
+```
+
+**Bad — `useCallback` on a handler passed to a native DOM element:**
+```tsx
+const handleClick = useCallback(() => {
+  setCount(count + 1);
+}, [count]);
+return <button onClick={handleClick}>Increment</button>;
+```
+**Good:**
+```tsx
+return <button onClick={() => setCount(count + 1)}>Increment</button>;
+```
+
+**Bad — memoizing a primitive or trivially derived boolean:**
+```tsx
+const isDisabled = useMemo(() => items.length === 0, [items]);
+```
+**Good:**
+```tsx
+const isDisabled = items.length === 0;
+```
+
+**Bad — `useCallback` for a function only used locally, not passed to children:**
+```tsx
+const parseInput = useCallback((raw: string) => {
+  return raw.trim().toLowerCase();
+}, []);
+// only called inside the same component
+const result = parseInput(inputValue);
+```
+**Good:**
+```tsx
+function parseInput(raw: string) {
+  return raw.trim().toLowerCase();
+}
+const result = parseInput(inputValue);
+```
+
+**Bad — memoizing a static or near-static list:**
+```tsx
+const tabs = useMemo(
+  () => [
+    { id: "overview", label: "Overview" },
+    { id: "settings", label: "Settings" },
+    { id: "billing", label: "Billing" },
+  ],
+  [],
+);
+```
+**Good:**
+```tsx
+const tabs = [
+  { id: "overview", label: "Overview" },
+  { id: "settings", label: "Settings" },
+  { id: "billing", label: "Billing" },
+];
+```
+Or, if referential stability is truly needed, hoist it outside the component:
+```tsx
+const TABS = [
+  { id: "overview", label: "Overview" },
+  { id: "settings", label: "Settings" },
+  { id: "billing", label: "Billing" },
+] as const;
+function MyComponent() {
+  // use TABS directly
+}
+```
+There is zero computation to save with a static literal and an empty dep array. If referential stability matters (e.g., it's passed to a memoized child), hoist the constant outside the component instead. `useMemo` with `[]` is never the right tool for static data.
+
+**When `useMemo` / `useCallback` IS appropriate (do not flag):**
+- Filtering or sorting a large array before passing it to a memoized child component.
+- A callback passed as a prop to a `React.memo`-wrapped component where referential stability prevents expensive re-renders.
+- A value used in a `useEffect` / `useMemo` dependency array where a new reference would cause unwanted re-execution.
+- Creating an object or array that serves as a context provider value.
+
+**How to check:**
+- `rg "useMemo|useCallback" <changed-files>` and inspect each call site.
+- For each occurrence, ask: (1) Is the computation genuinely expensive? (2) Is the memoized value consumed by a `React.memo` child, a hook dep array, or a context value? If the answer to both is no, flag it.
+
+**Reasoning:** `useMemo` and `useCallback` add cognitive overhead, increase closure scope, and make components harder to read. They are only net-positive when the memoized value is expensive to compute or when referential identity matters to a downstream consumer. For cheap expressions and native DOM event handlers, the cost of the hook (dependency array tracking, closure allocation) exceeds the cost of the computation itself.
+
+### 21. Inline Component Function Handlers (MEDIUM priority)
+
+When an event handler prop receives an inline arrow function that simply calls another function with no extra arguments, pass the function reference directly instead.
+
+**Bad — unnecessary inline wrapper:**
+```tsx
+<Button
+  variant="outline"
+  onClick={() => {
+    onSave();
+  }}
+  disabled={isMutating}
+>
+  <Trans>Save</Trans>
+</Button>
+```
+
+**Good — pass the reference directly:**
+```tsx
+<Button
+  variant="outline"
+  onClick={onSave}
+  disabled={isMutating}
+>
+  <Trans>Save</Trans>
+</Button>
+```
+
+This obviously doesn't apply when you need to pass a custom argument to the handler (e.g., `onClick={() => onSelect(item.id)}`), or when you need to ignore the event argument that would otherwise be forwarded (e.g., a handler typed to take no arguments being passed to `onClick` is fine, but if the handler's signature would conflict with the event arg, keep the wrapper).
+
+**How to check:**
+- Look for `onClick={() => fn()}`, `onChange={() => fn()}`, `onSubmit={() => fn()}`, etc. where the arrow body is just a single call to a named function with no extra args.
+- Replace with `onClick={fn}` unless the wrapper is needed to drop arguments or pass custom ones.
+
+### 22. Use `@unpic/react` `Image` Instead of Raw `<img>` (MEDIUM priority)
+
+The web-app uses `@unpic/react`'s `Image` component for all bitmap and SVG assets. Raw `<img>` elements should not be introduced in new code.
+
+**Bad — raw `<img>`:**
+```tsx
+<img
+  src="/illustrations/foo.svg"
+  alt=""
+  width={120}
+  height={36}
+  className="h-full w-full object-cover"
+/>
+```
+
+**Good — `@unpic/react` `Image`:**
+```tsx
+import { Image } from '@unpic/react';
+
+<Image
+  src="/illustrations/foo.svg"
+  alt=""
+  width={120}
+  height={36}
+  layout="fixed"
+  className="h-full w-full object-cover"
+/>
+```
+
+Notes:
+- Always pass `width` and `height` explicitly (required for layout to work without CLS).
+- Pick a `layout` (`"fixed"`, `"constrained"`, or `"fullWidth"`) — most static assets in this app use `"fixed"`.
+- Decorative images should keep `alt=""`.
+
+**How to check:**
+- `rg '<img ' <changed-files>` and flag each occurrence in `apps/web-app/`.
+- Confirm the import comes from `@unpic/react` and not React DOM.
+
+**Reasoning:** `@unpic/react` produces width/height-aware markup so layouts don't shift while images load, automatically handles `srcset` for raster assets, and gives us one consistent image primitive across the app. Mixing raw `<img>` defeats those guarantees and trips `eslint-plugin-next(no-img-element)`.
+
 ## Output Format
 
 Present findings as a markdown checklist grouped by category:
@@ -322,6 +512,9 @@ Present findings as a markdown checklist grouped by category:
 
 ### 10. Avoid `useEffect` Anti-Patterns
 - [ ] `notifications-tab.tsx:65` — fetching data inside `useEffect`, use a query hook instead
+
+### 22. Use `@unpic/react` `Image` Instead of `<img>`
+- [ ] `buffer-graphic.tsx:23` — raw `<img>` element, replace with `Image` from `@unpic/react`
 
 ...
 ```
