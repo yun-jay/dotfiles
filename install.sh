@@ -132,14 +132,37 @@ else
     echo "Claude Code already installed"
 fi
 
+# Install pi coding agent
+if ! command -v pi &> /dev/null; then
+    echo "Installing pi coding agent..."
+    npm install -g @earendil-works/pi-coding-agent
+else
+    echo "pi already installed"
+fi
+
+# Install pi plugins (idempotent; regenerates ~/.pi/agent/npm/)
+echo "Installing pi plugins..."
+for plugin in \
+    npm:pi-fff \
+    npm:pi-librarian \
+    npm:@fnnm/pi-session-breakdown \
+    npm:pi-finder-subagent \
+    npm:pi-mcp-adapter \
+    npm:pi-subagents \
+    npm:context-mode \
+    npm:@hypabolic/pi-hypa; do
+    pi install "$plugin"
+done
+
 # Remove existing configs to avoid stow conflicts
 rm -f ~/.claude/settings.json
 rm -f ~/.zshrc
 rm -rf ~/.zsh
+rm -f ~/.pi/agent/settings.json
 
 # Stow common packages
 cd "$DOTFILES"
-stow nvim tmux claude zsh task
+stow nvim tmux claude zsh task pi
 
 # Install Neovim plugins
 echo "Installing Neovim plugins..."

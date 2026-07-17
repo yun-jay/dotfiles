@@ -1,0 +1,7 @@
+# pi coding agent — never commit secrets or local state
+pi/.pi/agent/auth.json
+pi/.pi/agent/trust.json
+pi/.pi/agent/sessions/
+# plugins are reinstalled by install.sh, not committed (node_modules is ~240M)
+pi/.pi/agent/npm/
+pi/.pi/agent/git/

@@ -1,0 +1,17 @@
+{
+  "lastChangelogVersion": "0.80.3",
+  "theme": "dark",
+  "defaultProvider": "zai",
+  "defaultModel": "glm-5.1",
+  "defaultThinkingLevel": "medium",
+  "packages": [
+    "npm:pi-fff",
+    "npm:pi-librarian",
+    "npm:@fnnm/pi-session-breakdown",
+    "npm:pi-finder-subagent",
+    "npm:pi-mcp-adapter",
+    "npm:pi-subagents",
+    "npm:context-mode",
+    "npm:@hypabolic/pi-hypa"
+  ]
+}
