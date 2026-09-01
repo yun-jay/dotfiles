@@ -1,45 +1,57 @@
 {
+  "alwaysThinkingEnabled": true,
+  "editorMode": "vim",
+  "enabledPlugins": {
+    "figma@claude-plugins-official": true,
+    "gopls-lsp@claude-plugins-official": true,
+    "lua-lsp@claude-plugins-official": true,
+    "typescript-lsp@claude-plugins-official": true
+  },
   "hooks": {
-    "UserPromptSubmit": [
+    "Notification": [
       {
         "hooks": [
           {
-            "type": "command",
-            "command": "~/.claude/hooks/set-indicator.sh loading"
+            "command": "~/.claude/hooks/set-indicator.sh needs_input",
+            "type": "command"
           }
-        ]
+        ],
+        "matcher": "permission_prompt"
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "command": "bash '/Users/yunus/.claude/hooks/herdr-agent-state.sh' session",
+            "timeout": 10,
+            "type": "command"
+          }
+        ],
+        "matcher": "*"
       }
     ],
     "Stop": [
       {
         "hooks": [
           {
-            "type": "command",
-            "command": "~/.claude/hooks/set-indicator.sh idle"
+            "command": "~/.claude/hooks/set-indicator.sh idle",
+            "type": "command"
           }
         ]
       }
     ],
-    "Notification": [
+    "UserPromptSubmit": [
       {
-        "matcher": "permission_prompt",
         "hooks": [
           {
-            "type": "command",
-            "command": "~/.claude/hooks/set-indicator.sh needs_input"
+            "command": "~/.claude/hooks/set-indicator.sh loading",
+            "type": "command"
           }
         ]
       }
     ]
   },
-  "enabledPlugins": {
-    "typescript-lsp@claude-plugins-official": true,
-    "lua-lsp@claude-plugins-official": true,
-    "gopls-lsp@claude-plugins-official": true,
-    "figma@claude-plugins-official": true
-  },
-  "alwaysThinkingEnabled": true,
-  "tui": "fullscreen",
   "skipDangerousModePermissionPrompt": true,
-  "editorMode": "vim"
+  "tui": "fullscreen"
 }

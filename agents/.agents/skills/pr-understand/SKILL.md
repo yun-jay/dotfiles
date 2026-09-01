@@ -1,7 +1,6 @@
 ---
 name: pr-understand
 description: Understand what has been done in a Pull Request by analyzing the diff
-argument-hint: [PR-number]
 ---
 
 # PR Understanding Skill
@@ -11,7 +10,7 @@ Analyze a Pull Request to understand what changes have been made.
 ## Instructions
 
 1. **Determine the PR**:
-   - If argument `$0` is provided, use it as the PR number
+   - If the user provided a PR number with the skill invocation, use it
    - Otherwise, check if current branch has a PR: `gh pr view --json number,title,body`
    - If no PR found, ask the user for the PR number
 
@@ -20,7 +19,8 @@ Analyze a Pull Request to understand what changes have been made.
    - Read the pr-context.md file (contains PR title, description, and diff)
 
 3. **Explore the codebase**:
-   - Spin up at least one Explore agent (using Task tool with subagent_type=Explore) to understand:
+   - Delegate at least one read-only codebase exploration to an available explore/research subagent. If the harness has no subagent mechanism, perform the same exploration directly.
+   - Understand:
      - The architecture and patterns used in the affected areas
      - How the changed files relate to the rest of the codebase
      - What components or features depend on the changed code

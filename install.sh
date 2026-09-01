@@ -200,7 +200,7 @@ rm -f ~/.pi/agent/settings.json
 
 # Stow common packages
 cd "$DOTFILES"
-stow nvim tmux claude zsh task pi
+stow nvim tmux claude agents herdr zsh task pi
 
 # Install Neovim plugins
 echo "Installing Neovim plugins..."

@@ -1,7 +1,6 @@
 ---
 name: write-pr-description
 description: Write or rewrite a pull request description in Yunus's house style. Use when asked to "write a PR description", "update the PR description", or to draft the body for a `gh pr create`. Defaults to editing the current branch's open PR; falls back to printing the body for a new PR.
-argument-hint: "[PR-number]"
 ---
 
 # write-pr-description
@@ -11,14 +10,14 @@ Write a PR body that matches the voice and structure of the author's last ~20 PR
 ## When invoked
 
 1. **Resolve the target.**
-   - If `$0` is a PR number, edit that PR's body.
+   - If the user provided a PR number with the skill invocation, edit that PR's body.
    - Else, if the current branch has an open PR (`gh pr view --json number,url`), edit it.
    - Else, print the body to stdout so the caller can pipe it into `gh pr create --body-file -` (or include it in a heredoc).
 
 2. **Gather context** (run in parallel where possible):
    - `git log <base>..HEAD --oneline`, commit history on this branch.
    - `git diff <base>...HEAD`, the actual changes. Read it, don't skim. Base is typically `dev`.
-   - If the branch name embeds a Linear ticket (e.g. `hel-12805-…`), fetch it: `mcp__claude_ai_Linear__get_issue` with the identifier. Pull the title, description, and any acceptance criteria.
+   - If the branch name embeds a Linear ticket (e.g. `hel-12805-…`), fetch it through any configured Linear integration, MCP server, CLI, or API. Pull the title, description, and any acceptance criteria. If Linear is unavailable, continue with the branch and PR context.
    - If a related/linked PR is mentioned in commits or by the user, fetch it with `gh pr view <number>` to mirror its tone and reference it correctly.
 
 3. **Draft the body** following the template + style below.

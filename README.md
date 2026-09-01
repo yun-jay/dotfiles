@@ -9,6 +9,8 @@ My personal dotfiles managed with [GNU Stow](https://www.gnu.org/software/stow/)
 - `nvim` - Neovim configuration with Lazy.nvim, LSP, Telescope, etc.
 - `tmux` - Tmux configuration with TPM plugins
 - `claude` - Claude Code CLI settings and hooks
+- `agents` - Shared Agent Skills for Claude Code, Pi, and Codex
+- `herdr` - Herdr configuration and keybindings
 
 ### macOS only
 
@@ -44,7 +46,7 @@ sudo apt install stow nvim tmux
 cd ~/dotfiles
 
 # Cross-platform
-stow nvim tmux claude
+stow nvim tmux claude agents herdr
 
 # macOS only
 stow karabiner
@@ -54,7 +56,7 @@ stow karabiner
 
 ```bash
 cd ~/dotfiles
-stow -D nvim tmux claude karabiner
+stow -D nvim tmux claude agents herdr karabiner
 ```
 
 ## Updating
@@ -75,6 +77,8 @@ dotfiles/
 ├── nvim/.config/nvim/          →  ~/.config/nvim
 ├── tmux/.tmux.conf             →  ~/.tmux.conf
 ├── claude/.claude/             →  ~/.claude
+├── agents/.agents/skills/      →  ~/.agents/skills
+├── herdr/.config/herdr/        →  ~/.config/herdr
 └── karabiner/.config/karabiner →  ~/.config/karabiner
 ```
 

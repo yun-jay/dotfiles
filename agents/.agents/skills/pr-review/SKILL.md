@@ -1,7 +1,6 @@
 ---
 name: pr-review
 description: Analyze unresolved PR review comments and create a plan to address them
-argument-hint: [PR-number]
 ---
 
 # PR Review Comments Skill
@@ -11,7 +10,7 @@ Analyze unresolved PR review comments and create a plan to address each one.
 ## Instructions
 
 1. **Determine the PR**:
-   - If argument `$0` is provided, use it as the PR number
+   - If the user provided a PR number with the skill invocation, use it
    - Otherwise, check if current branch has a PR: `gh pr view --json number`
    - If no PR found, ask the user for the PR number
 
@@ -21,7 +20,8 @@ Analyze unresolved PR review comments and create a plan to address each one.
    - Read both files (pr-context.md has title, description, and diff)
 
 3. **Explore the codebase**:
-   - Spin up at least one Explore agent (using Task tool with subagent_type=Explore) to understand:
+   - Delegate at least one read-only codebase exploration to an available explore/research subagent. If the harness has no subagent mechanism, perform the same exploration directly.
+   - Understand:
      - The architecture and patterns used in the affected areas
      - Why the code was written this way
      - Project conventions and best practices
@@ -37,7 +37,7 @@ Analyze unresolved PR review comments and create a plan to address each one.
    - **Nitpick**: Minor style or preference issue
    - **Blocker**: Critical issue that must be addressed
 
-4. **Create an action plan**:
+5. **Create an action plan**:
 
    For each comment, you MUST decide: **Does this need to be fixed?**
 
@@ -79,8 +79,6 @@ Analyze unresolved PR review comments and create a plan to address each one.
    ---
    [Repeat for each comment]
    ```
-
-5. **Create an action plan**:
 
 6. **Present to user for approval**:
    - Show the action plan
