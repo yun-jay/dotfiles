@@ -92,12 +92,15 @@ else
 fi
 nvm use default
 
-# Install typescript-language-server via npm
-if ! command -v typescript-language-server &> /dev/null; then
-    echo "Installing typescript-language-server..."
-    npm install -g typescript-language-server typescript
+# Install a TypeScript language server and a compatible global tsserver fallback.
+# TypeScript 7 no longer ships lib/tsserver.js, which typescript-language-server 6 requires.
+GLOBAL_NODE_MODULES="$(npm root -g)"
+GLOBAL_TSSERVER="$GLOBAL_NODE_MODULES/typescript/lib/tsserver.js"
+if ! command -v typescript-language-server &> /dev/null || [ ! -f "$GLOBAL_TSSERVER" ]; then
+    echo "Installing typescript-language-server 6 and TypeScript 6..."
+    npm install -g typescript-language-server@6 typescript@6
 else
-    echo "typescript-language-server already installed"
+    echo "typescript-language-server and a compatible TypeScript installation already installed"
 fi
 
 # Install pnpm via npm

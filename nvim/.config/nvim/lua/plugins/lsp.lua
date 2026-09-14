@@ -41,6 +41,19 @@ return {
     config = function()
       local capabilities = require("cmp_nvim_lsp").default_capabilities()
 
+      -- Use the global TypeScript installation as a portable fallback while
+      -- allowing each workspace's local TypeScript version to take precedence.
+      local global_tsserver_path
+      if vim.fn.executable("npm") == 1 then
+        local npm_root = vim.fn.system({ "npm", "root", "-g" })
+        if vim.v.shell_error == 0 then
+          local candidate = vim.trim(npm_root) .. "/typescript/lib/tsserver.js"
+          if vim.fn.filereadable(candidate) == 1 then
+            global_tsserver_path = candidate
+          end
+        end
+      end
+
       -- LSP keymaps on attach
       vim.api.nvim_create_autocmd("LspAttach", {
         callback = function(args)
@@ -91,6 +104,11 @@ return {
         filetypes = { "typescript", "typescriptreact", "javascript", "javascriptreact" },
         root_markers = { "package.json", "tsconfig.json", "jsconfig.json", ".git" },
         capabilities = capabilities,
+        init_options = {
+          tsserver = {
+            fallbackPath = global_tsserver_path,
+          },
+        },
       })
 
       -- Enable LSP servers
