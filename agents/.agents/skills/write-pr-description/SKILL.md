@@ -1,103 +1,99 @@
 ---
 name: write-pr-description
-description: Write or rewrite a pull request description in Yunus's house style. Use when asked to "write a PR description", "update the PR description", or to draft the body for a `gh pr create`. Defaults to editing the current branch's open PR; falls back to printing the body for a new PR.
+description: Write or rewrite a concise pull request description in Yunus's house style. Use when asked to "write a PR description", "update the PR description", or draft the body for a `gh pr create`. Uses ASD-STE100 for clear prose, explains the change and why this implementation is the right choice, and defaults to editing the current branch's open PR.
 ---
 
 # write-pr-description
 
-Write a PR body that matches the voice and structure of the author's last ~20 PRs. Pull fresh exemplars when in doubt, style drifts.
+Write a short PR body that explains the purpose and the implementation choice. Match the author's voice, but use the new structure in this skill instead of copying an old PR structure.
+
+## Required writing skill
+
+Before drafting, load and follow the `asd-ste100` skill at its default 80% level.
+
+Apply its sentence rules and guard rails to all PR prose. Keep the conversational voice below. Clarity and factual accuracy are more important than stylistic flourishes.
 
 ## When invoked
 
 1. **Resolve the target.**
    - If the user provided a PR number with the skill invocation, edit that PR's body.
    - Else, if the current branch has an open PR (`gh pr view --json number,url`), edit it.
-   - Else, print the body to stdout so the caller can pipe it into `gh pr create --body-file -` (or include it in a heredoc).
+   - Else, print the body to stdout so the caller can pipe it into `gh pr create --body-file -` or include it in a heredoc.
 
 2. **Gather context** (run in parallel where possible):
-   - `git log <base>..HEAD --oneline`, commit history on this branch.
-   - `git diff <base>...HEAD`, the actual changes. Read it, don't skim. Base is typically `dev`.
-   - If the branch name embeds a Linear ticket (e.g. `hel-12805-…`), fetch it through any configured Linear integration, MCP server, CLI, or API. Pull the title, description, and any acceptance criteria. If Linear is unavailable, continue with the branch and PR context.
-   - If a related/linked PR is mentioned in commits or by the user, fetch it with `gh pr view <number>` to mirror its tone and reference it correctly.
+   - Read `git log <base>..HEAD --oneline` for the commit history on this branch.
+   - Read `git diff <base>...HEAD` in full. Base is typically `dev`.
+   - Read relevant RFCs, package documentation, or nearby code when they explain an ownership boundary or implementation constraint.
+   - If the branch name embeds a Linear ticket (for example, `hel-12805-...`), fetch it through any configured Linear integration, MCP server, CLI, or API. Pull the title, description, and acceptance criteria. If Linear is unavailable, continue with the branch and PR context.
+   - If the user or commits mention a related PR, fetch it with `gh pr view <number>`. Use it for context and tone.
+   - Identify the closest credible alternative only when the task, diff, documentation, or code provides evidence for it. Never invent an alternative to make the rationale sound stronger.
 
-3. **Draft the body** following the template + style below.
+3. **Draft the body** with the structure and voice below.
 
 4. **Apply it.**
-   - Existing PR: `gh pr edit <num> --body-file <tmpfile>` (use a temp file, not `--body "..."`, avoids shell quoting hell with backticks and `$`).
-   - New PR: print to stdout for the caller to consume.
+   - Existing PR: write the body to a temporary file, then run `gh pr edit <num> --body-file <tmpfile>`. Do not use `--body "..."` because backticks and `$` make shell quoting unsafe.
+   - New PR: print the body to stdout for the caller to consume.
 
-## Template (use these exact headings)
+## Structure
 
-```
-## What does this PR do?
-<prose, see voice notes below>
+Use two short paragraphs without headings:
 
-## How did you verify the code works?
-- <terse bullet>
+```text
+Purpose of this PR is to <state the change and its outcome>.
 
-## How to test this PR?
-- <terse bullet(s)>
+<Explain why this implementation fits the system better than the relevant alternative.>
 
 Resolves hel-XXXXX
 ```
 
-The headings are GitHub-PR-template defaults, don't rename, don't drop. The bottom `Resolves hel-XXXXX` (lowercase) is non-negotiable when there's a ticket.
+The first sentence must start with `Purpose of this PR is to`. Do not use a different opener, including for a mini PR, bug fix, or follow-up.
+
+The first paragraph describes the change and why it matters. The second paragraph explains the implementation choice. Name the relevant constraint, existing abstraction, contract, source of truth, or ownership boundary. Contrast the choice with the closest credible alternative when one exists. If there is no meaningful alternative, explain why the implementation fits the existing design. Do not fabricate a comparison.
+
+Do not add `What does this PR do?`, `How did you verify the code works?`, `How to test this PR?`, or any replacement headings. Do not add a standalone verification or test section.
+
+Add `Resolves hel-XXXXX` in lowercase as the final line when there is a ticket.
 
 ## Voice notes
 
-**First sentence pattern.** Pick one based on PR shape:
-- **Standard PR**: `Purpose of this PR is to <verb> …`
-- **Tiny PR**: `Mini PR <doing X>` (omits "Purpose of this PR is to", signals scope to reviewers).
-- **Bug fix where root cause is the point**: dive straight in. `Fixes <symptom>. Cause was that <X>. Fix is <Y>.`
-- **Follow-up**: `Symmetrizes / extends / completes <#prior-PR>'s handling of …`
+**Tone.** First person, conversational, and mildly self-aware. Do not sound corporate. Asides and parentheticals are fine when they help. These emojis are allowed when they fit naturally: `:)`, `🥳`, `😃`. Light phrases such as `Scream if you think I should implement this differently :)`, `Not super critical since ...`, and `Side mark, I intentionally chose ...` are permitted. Do not force them.
 
-**Tone.** First person, conversational, mildly self-aware. Not corporate. Asides and parentheticals are fine. Allowed emojis (sparingly, only when they fit naturally): `:)`, `🥳`, `😃`. Permitted lightness: `"Scream if you think I should implement this differently :)"`, `"Not super critical since …"`, `"Side mark, I intentionally chose …"`. Don't force it.
+**Content.** Prefer the why over a summary of the diff. Reviewers can read the diff.
 
-**What goes in "What does this PR do?".**
-- The *why* > the *what*. Reviewers can read the diff.
-- For fixes: name the symptom (often the verbatim error message in backticks), then cause, then fix. Include blast-radius numbers when known (`"218 failures across 9 nodes"`, `"17 production templates affected"`).
-- Bulleted list when there are >2 distinct changes; prose for 1–2.
-- Cross-link related PRs by number (`#8347`) or markdown (`[#7269](https://github.com/getmateo/hellomateo/pull/7269)`).
-- @-mention collaborators when relevant (`as @SoerenGauch requested`).
-- Embed screenshots/videos inline using GitHub user-attachments URLs, leave a placeholder like `<add screenshot>` if not provided.
-- Reference the Linear ticket inline near the bottom of this section (`Fixes HEL-XXXXX`, uppercase here; the lowercase `Resolves hel-XXXXX` trailer is separate).
+- For a fix, name the symptom, cause, and fix when known. Keep quoted error messages unchanged.
+- Include blast-radius numbers when known.
+- Cross-link related PRs by number or Markdown link.
+- Mention collaborators when relevant.
+- Embed a provided screenshot or video with its GitHub user-attachment URL. Use `<add screenshot>` only when a visual is necessary but unavailable.
+- Do not make vague claims such as "cleaner" or "more robust". Name the concrete benefit or constraint.
 
-**What goes in "How did you verify".** Be terse. Almost always one of:
-- `- manually`
-- `- added tests`
-- `- updated/added unit tests (<file>, <N> cases)` for bigger changes
-- Combine when both: `- added tests` / `- captured live <X> webhooks through a tunnel, confirmed <Y>`
+**Length.** Default to 2 to 5 short sentences across the two paragraphs. Aim for 100 words or fewer. Use more only when a reviewer needs a non-obvious root cause or tradeoff to assess the change. Keep each sentence within the `asd-ste100` limits.
 
-**What goes in "How to test".** Bullets. For backend / pure logic: `- run the tests`. For UI: imperative steps a reviewer can follow (`- create a booking in the iframe, cancel the booking, then try to click the button new booking`). Skip narration; just the steps.
+Before posting, remove bloat:
 
-**Length.** Default to short. The author keeps PR bodies tight; a long body is rare and only paid for by genuine complexity (root-cause narratives for non-obvious bugs, multi-area refactors that need a roadmap). When in doubt, cut.
+- Remove any sentence that only repeats the title or a clear part of the diff.
+- Remove file lists and rename lists unless they explain the design choice.
+- Replace long clauses with short sentences.
+- Keep one idea in each sentence.
+- Keep one name for each concept.
 
-- Mini PR: 2–4 sentences total.
-- Standard fix/feat: 1–2 short paragraphs in "What does this PR do?". A "paragraph" is 2–4 sentences, not a wall.
-- Complex/multi-area: cap "What does this PR do?" at ~150 words / ~12 bullet lines. If it wants to grow past that, you're probably explaining the diff instead of the why.
+Do not add a context, background, verification, or testing section. Link to a document or issue when the rationale needs more detail.
 
-**Before posting, sweep for bloat:**
-- Each bullet > 1 line of prose? Collapse or drop.
-- Any sentence the reviewer could derive from the diff in 10 seconds? Cut.
-- Listing every file or every rename? Cut.
-- Multiple "additionally / furthermore / concretely / also" clauses? Probably padding.
-- Repeating the title in expanded form? Cut.
+## Do not
 
-If you find yourself writing a "context" or "background" section, stop. That's a doc, not a PR description. Link to the doc or to a related issue instead.
-
-**Don't.**
-- Never use em dashes (`—`, U+2014) or en dashes (`–`, U+2013). The author doesn't write them. Prefer commas, parentheses, colons, semicolons, or two short sentences. This rule is strict, sweep the draft for `—` before posting.
-- Don't write "This PR ..." repeatedly. Vary openers.
-- Don't restate the diff line-by-line.
-- Don't add headings beyond the template.
-- Don't pretend to have tested manually if you only wrote tests, or vice versa; defer to the actual evidence.
+- Never use em dashes (`—`, U+2014) or en dashes (`–`, U+2013). Use commas, parentheses, colons, or two short sentences.
+- Do not use semicolons.
+- Do not restate the diff line by line.
+- Do not invent facts, constraints, alternatives, test results, or confidence.
+- Do not change identifiers, commands, numbers, quoted errors, or scope limits.
+- Do not add headings.
 
 ## Calibration: pull live exemplars
 
-If anything in the voice notes feels stale or you're unsure of current conventions, fetch the last few PRs:
+If the tone feels stale, fetch the last few PRs:
 
-```
+```sh
 gh pr list --repo getmateo/hellomateo --author yun-jay --state all --limit 5 --json number,title,body
 ```
 
-Match the most recent shape, not an old one.
+Use recent PRs only to calibrate tone. Do not copy their headings, testing sections, or older structure. The structure in this skill is authoritative.
